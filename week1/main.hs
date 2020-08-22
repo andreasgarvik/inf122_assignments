@@ -13,7 +13,7 @@ qsort (x : xs) = qsort larger ++ [x] ++ qsort smaller
 -- The second element will be dropped
 -- because it is not more or less then the first element
 -- which is the element it is compared to.
--- To put it another way, it will not satisfy the condition.
+-- To put it another way, it will not satisfy any of the conditions.
 
 -- 2.7 Exercises
 
