@@ -16,10 +16,10 @@ clrLine (x, y) = do
   goto (x, y)
   putStr "\ESC[2K"
 
-clrMsg :: IO ()
-clrMsg = do
-  clrLine (6, 0)
-  clrLine (7, 0)
+clrMsg :: Int -> IO ()
+clrMsg rows = do
+  clrLine (rows + 3, 0)
+  clrLine (rows + 4, 0)
 
 writeTop :: Int -> IO ()
 writeTop rows = writeAt (0, 4) (numbers rows)
@@ -49,59 +49,60 @@ goto :: (Int, Int) -> IO ()
 goto (x, y) = putStr ("\ESC[" ++ show x ++ ";" ++ show y ++ "H")
 
 -- B
-play :: IO ()
-play = do
-  brett 3
+
+play :: Int -> IO ()
+play rows = do
+  brett rows
   putStrLn
     "To draw an X, write \"n x y\", to erase an X write \"d x y\""
-  clrMsg
-  loop
+  clrMsg rows
+  loop rows
 
-loop :: IO ()
-loop = do
+loop :: Int -> IO ()
+loop rows = do
   line <- getCmd
   let cmd = words line
-  readCmd cmd
+  readCmd cmd rows
 
-readCmd :: [String] -> IO ()
-readCmd cmd
+readCmd :: [String] -> Int -> IO ()
+readCmd cmd rows
   | head cmd == "q" = return ()
   | head cmd == "n" = do
-    chechPos cmd
+    chechPos cmd rows
     writeAt (pos cmd) "X"
-    clrMsg
-    loop
+    clrMsg rows
+    loop rows
   | head cmd == "d" = do
-    chechPos cmd
+    chechPos cmd rows
     writeAt (pos cmd) "."
-    clrMsg
-    loop
+    clrMsg rows
+    loop rows
   | otherwise = do
-    writeError "Unknown command"
-    loop
+    writeError "Unknown command" rows
+    loop rows
 
-writeError :: String -> IO ()
-writeError err = do
-  clrLine (6, 0)
-  writeAt (6, 0) err
-  clrLine (7, 0)
+writeError :: String -> Int -> IO ()
+writeError err rows = do
+  clrLine (rows + 3, 0)
+  writeAt (rows + 3, 0) err
+  clrLine (rows + 4, 0)
 
 getCmd :: IO String
 getCmd = do
   line <- getLine
   if length line /= 0 then return line else getCmd
 
-chechPos :: [String] -> IO ()
-chechPos cmd =
+chechPos :: [String] -> Int -> IO ()
+chechPos cmd rows =
   if length cmd < 3 || not (allDigits (tail cmd))
     then do
-      writeError "Provide a \"n\" or \"d\" and two numbers"
-      loop
+      writeError "Provide a \"n\" or \"d\" and two numbers" rows
+      loop rows
     else
-      if x > 3 || y > 3 || x < 1 || y < 1
+      if x > rows || y > rows || x < 1 || y < 1
         then do
-          writeError "Provide a position within the board 1-3"
-          loop
+          writeError ("Provide a position within the board 1-" ++ show rows) rows
+          loop rows
         else return ()
   where
     x = read (cmd !! 2)
